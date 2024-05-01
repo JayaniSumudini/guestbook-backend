@@ -10,6 +10,15 @@ functions:
   comments:
     handler: dist/app.handler
     events:
-      - http: 
+      - http:
           path: /api/comments
-          method: POST
+          method: ANY
+      - http:
+          path: /api/comments/{id}
+          method: ANY
+  users:
+    handler: dist/app.handler
+    events:
+      - http:
+          path: /api/users
+          method: ANY

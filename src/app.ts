@@ -1,11 +1,16 @@
+import bodyParser from 'body-parser';
 import express, { Express } from 'express';
 import serverless from 'serverless-http';
 import routes from './routes';
-
+import connectDB from './services/database/mongodb/connectDatabase';
 const app: Express = express();
+
+connectDB();
+
 const port = 3000;
 
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/api', routes);
 
 app.listen(port, () => {
