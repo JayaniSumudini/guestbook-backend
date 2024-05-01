@@ -1,0 +1,15 @@
+org: jayanisumudini
+service: guestbook-backend-service
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: dev
+  region: ap-southeast-1
+
+functions:
+  comments:
+    handler: dist/app.handler
+    events:
+      - http: 
+          path: /api/comments
+          method: POST

@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rimraf dist && tsc",
     "lint": "eslint . --ext .ts",
-    "test": "jest --verbose --coverage"
+    "test": "jest --verbose --coverage",
+    "deploy": "sls deploy"
   },
   "repository": "https://github.com/JayaniSumudini/guestbook-backend.git",
   "author": "Jayani Sumudini <jayanisumudini@gmail.com>",
