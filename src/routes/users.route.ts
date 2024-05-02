@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import config from 'config';
 import { Request, Response, Router } from 'express';
+import { check, validationResult } from 'express-validator';
 import HttpStatusCodes from 'http-status-codes';
 import jwt from 'jsonwebtoken';
 import UserModel, { IUser } from '../models/userModel';
@@ -18,54 +19,67 @@ router.get('/', async (req: Request, res: Response) => {
     res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
   }
 });
-router.post('/', async (req: Request, res: Response) => {
-  try {
-    const { name, email, password } = req.body;
-    console.log(name, email, password);
-    let user: IUser | null = await UserModel.findOne({ email });
-    console.log(user);
-
-    if (user) {
-      return res.status(HttpStatusCodes.BAD_REQUEST).json({ message: 'User already exists' });
+router.post(
+  '/',
+  [
+    check('email', 'Please include a valid email').isEmail(),
+    check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
+    check('name', 'Please enter a name').not().isEmpty(),
+  ],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(HttpStatusCodes.BAD_REQUEST).json({ errors: errors.array() });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashed = await bcrypt.hash(password, salt);
+    try {
+      const { name, email, password } = req.body;
+      console.log(name, email, password);
+      let user: IUser | null = await UserModel.findOne({ email });
+      console.log(user);
 
-    const newUser: User = {
-      name,
-      email,
-      password: hashed,
-      userType: UserType.USER,
-      createdAt: new Date(),
-    };
+      if (user) {
+        return res.status(HttpStatusCodes.BAD_REQUEST).json({ message: 'User already exists' });
+      }
 
-    user = new UserModel(newUser);
-    console.log(user);
-    await user.save();
+      const salt = await bcrypt.genSalt(10);
+      const hashed = await bcrypt.hash(password, salt);
 
-    await user.save();
+      const newUser: User = {
+        name,
+        email,
+        password: hashed,
+        userType: UserType.USER,
+        createdAt: new Date(),
+      };
 
-    const payload: Payload = {
-      userId: user.id,
-      userType: user.userType,
-    };
+      user = new UserModel(newUser);
+      console.log(user);
+      await user.save();
 
-    const jwtSecret: string = config.get('jwtSecret');
-    console.log(jwtSecret);
-    const expiresIn: string = config.get('jwtExpiration');
-    const token = jwt.sign(payload, jwtSecret, {
-      expiresIn,
-    });
+      await user.save();
 
-    res.status(HttpStatusCodes.CREATED).json({
-      accessToken: token,
-    });
-  } catch (error) {
-    console.error('An error occurred:', error);
-    res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
-  }
-});
+      const payload: Payload = {
+        userId: user.id,
+        userType: user.userType,
+      };
+
+      const jwtSecret: string = config.get('jwtSecret');
+      console.log(jwtSecret);
+      const expiresIn: string = config.get('jwtExpiration');
+      const token = jwt.sign(payload, jwtSecret, {
+        expiresIn,
+      });
+
+      res.status(HttpStatusCodes.CREATED).json({
+        accessToken: token,
+      });
+    } catch (error) {
+      console.error('An error occurred:', error);
+      res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
+    }
+  },
+);
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const user = await UserModel.findById(req.params.id).select('-password');

@@ -1,5 +1,6 @@
 {
   "mongoURI": "",
   "jwtSecret": "",
-  "jwtExpiration": "1h"
+  "jwtExpiration": "1h",
+  "jwtResetPasswordSecret": ""
 }
