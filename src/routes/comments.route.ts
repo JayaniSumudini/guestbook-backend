@@ -13,8 +13,8 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const comments = await CommentModel.find({ isDeleted: false });
-    res.json(comments);
+    const comments = await CommentModel.find({ isDeleted: false }).sort({ createdAt: -1 });
+    res.json({ comments });
   } catch (error) {
     console.error('An error occurred:', error);
     res.status(500).json(error);
@@ -53,7 +53,7 @@ router.post(
       const comment = new CommentModel(newComment);
       console.log(comment);
       await comment.save();
-      res.status(201).json(comment.id);
+      res.status(201).json({ commentId: comment.id });
     } catch (error) {
       console.error('An error occurred:', error);
       res.status(500).json(error);
