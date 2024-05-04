@@ -33,7 +33,9 @@ router.post(
       console.log(content);
       let newComment: Comment = {
         content,
-        userType: UserType.GUEST,
+        user: {
+          userType: UserType.GUEST,
+        },
         createdAt: new Date(),
         isDeleted: false,
       };
@@ -45,8 +47,9 @@ router.post(
         const userId = (decoded as Payload).userId;
         const user = await UserModel.findById(userId).select('-password');
         if (user) {
-          newComment.userType = UserType.USER;
-          newComment.userId = userId;
+          newComment.user.userType = UserType.USER;
+          newComment.user.id = userId;
+          newComment.user.name = user.name;
         }
       }
 

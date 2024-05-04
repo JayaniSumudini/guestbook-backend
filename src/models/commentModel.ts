@@ -8,14 +8,20 @@ const commentSchema: Schema = new Schema({
     type: String,
     required: true,
   },
-  userType: {
-    type: String,
-    required: true,
-  },
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: false,
+  user: {
+    userType: {
+      type: String,
+      required: true,
+    },
+    id: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+    },
+    name: {
+      type: String,
+      required: false,
+    },
   },
   createdAt: {
     type: Date,

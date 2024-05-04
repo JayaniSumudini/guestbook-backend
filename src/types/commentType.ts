@@ -3,10 +3,15 @@ import { UserType } from './userType';
 
 export type Comment = {
   content: string;
-  userType: UserType;
-  userId?: IUser["_id"];
+  user: CommentUserDetails;
   createdAt: Date;
   updatedAt?: Date;
   deletedAt?: Date;
   isDeleted?: boolean;
+};
+
+export type CommentUserDetails = {
+  userType: UserType;
+  id?: IUser['_id'];
+  name?: string;
 };
