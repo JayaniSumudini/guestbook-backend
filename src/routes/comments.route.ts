@@ -30,7 +30,7 @@ router.post(
     }
     try {
       const { content } = req.body;
-      console.log(content);
+
       let newComment: Comment = {
         content,
         user: {
@@ -42,8 +42,18 @@ router.post(
 
       const token = req.header('Authorization')?.replace('Bearer ', '');
       if (token) {
-        const decoded = jwt.verify(token, config.get('jwtSecret'));
-        console.log(decoded);
+        let decoded;
+        try {
+          decoded = jwt.verify(token, config.get('jwtSecret'));
+        } catch (error) {
+          return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+            errors: [
+              {
+                msg: 'Invalid Auth token',
+              },
+            ],
+          });
+        }
         const userId = (decoded as Payload).userId;
         const user = await UserModel.findById(userId).select('-password');
         if (user) {
@@ -81,14 +91,62 @@ router.delete('/:id', async (req: Request, res: Response) => {
     res.status(500).json(error);
   }
 });
-router.put('/:id', async (req: Request, res: Response) => {
-  try {
-    const comment = await CommentModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(comment);
-  } catch (error) {
-    console.error('An error occurred:', error);
-    res.status(500).json(error);
-  }
-});
+router.put(
+  '/:id',
+  [check('content', 'Please include a content with 5 or more characters').isLength({ min: 5 })],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(HttpStatusCodes.BAD_REQUEST).json({ errors: errors.array() });
+    }
+    try {
+      const token = req.header('Authorization')?.replace('Bearer ', '');
+      if (token) {
+        let decoded;
+        try {
+          decoded = jwt.verify(token, config.get('jwtSecret'));
+          console.log(decoded);
+        } catch (error) {
+          return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+            errors: [
+              {
+                msg: 'Invalid Auth token',
+              },
+            ],
+          });
+        }
+
+        const userId = (decoded as Payload).userId;
+        const comment = await CommentModel.findById(req.params.id);
+        if (comment?.user?.id.toString() === userId) {
+          const { content } = req.body;
+          const newComment = await CommentModel.findByIdAndUpdate(req.params.id, content, { new: true });
+          res.json({
+            comment: newComment,
+          });
+        } else {
+          return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+            errors: [
+              {
+                msg: 'Invalid Auth token',
+              },
+            ],
+          });
+        }
+      } else {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'Auth token is required',
+            },
+          ],
+        });
+      }
+    } catch (error) {
+      console.error('An error occurred:', error);
+      res.status(500).json(error);
+    }
+  },
+);
 
 export default router;

@@ -39,7 +39,10 @@ router.post(
       console.log(user);
 
       if (user) {
-        return res.status(HttpStatusCodes.BAD_REQUEST).json({ message: 'User already exists' });
+        return res.status(HttpStatusCodes.BAD_REQUEST).json({
+          message: 'User already exists',
+          errorCode: 1100,
+        });
       }
 
       const salt = await bcrypt.genSalt(10);
@@ -89,15 +92,52 @@ router.get('/:id', async (req: Request, res: Response) => {
     res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
   }
 });
-router.put('/:id', async (req: Request, res: Response) => {
-  try {
-    const user = await UserModel.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-password');
-    res.json(user);
-  } catch (error) {
-    console.error('An error occurred:', error);
-    res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
-  }
-});
+router.put(
+  '/',
+  [check('username', 'Please include a content with 5 or more characters').isLength({ min: 5, max: 25 })],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(HttpStatusCodes.BAD_REQUEST).json({ errors: errors.array() });
+    }
+    try {
+      const token = req.header('Authorization')?.replace('Bearer ', '');
+
+      if (token) {
+        let decoded;
+        try {
+          decoded = jwt.verify(token, config.get('jwtSecret'));
+          console.log(decoded);
+        } catch (error) {
+          return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+            errors: [
+              {
+                msg: 'Invalid Auth token',
+              },
+            ],
+          });
+        }
+
+        const userId = (decoded as Payload).userId;
+        const { username } = req.body;
+
+        const user = await UserModel.findByIdAndUpdate(userId, { name: username }, { new: true }).select('-password');
+        res.json(user);
+      } else {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'Auth token is required',
+            },
+          ],
+        });
+      }
+    } catch (error) {
+      console.error('An error occurred:', error);
+      res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
+    }
+  },
+);
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const user = await UserModel.findByIdAndUpdate(req.params.id, { isDeleted: true }, { new: true }).select(
