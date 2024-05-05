@@ -34,6 +34,25 @@ router.post(
           ],
         });
       }
+
+      if (user.isDeleted) {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'User profile is deleted',
+            },
+          ],
+        });
+      }
+      if (user.isBanned) {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'User profile is banned by admin',
+            },
+          ],
+        });
+      }
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         return res.status(HttpStatusCodes.UNAUTHORIZED).json({

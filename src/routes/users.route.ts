@@ -35,14 +35,22 @@ router.post(
     try {
       const { name, email, password } = req.body;
       console.log(name, email, password);
-      let user: IUser | null = await UserModel.findOne({ email });
+      let user: IUser | null = await UserModel.findOne({ email }); 
+
       console.log(user);
 
       if (user) {
-        return res.status(HttpStatusCodes.BAD_REQUEST).json({
-          message: 'User already exists',
-          errorCode: 1100,
-        });
+        if (user.isDeleted || user.isBanned) {
+          return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+            message: 'User already exists.Please contact Admin to enable your profileS',
+            errorCode: 1100,
+          });
+        } else {
+          return res.status(HttpStatusCodes.BAD_REQUEST).json({
+            message: 'User already exists',
+            errorCode: 1100,
+          });
+        }
       }
 
       const salt = await bcrypt.genSalt(10);
@@ -144,6 +152,42 @@ router.delete('/:id', async (req: Request, res: Response) => {
       '-password',
     );
     res.json(user);
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
+});
+
+router.delete('/', async (req: Request, res: Response) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    if (token) {
+      let decoded;
+      try {
+        decoded = jwt.verify(token, config.get('jwtSecret'));
+        console.log(decoded);
+      } catch (error) {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'Invalid Auth token',
+            },
+          ],
+        });
+      }
+
+      const userId = (decoded as Payload).userId;
+      const user = await UserModel.findByIdAndUpdate(userId, { isDeleted: true }, { new: true }).select('-password');
+      res.json(user);
+    } else {
+      return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+        errors: [
+          {
+            msg: 'Auth token is required',
+          },
+        ],
+      });
+    }
   } catch (error) {
     console.error('An error occurred:', error);
     res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
