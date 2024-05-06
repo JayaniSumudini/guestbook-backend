@@ -27,17 +27,6 @@ router.post(
   },
 );
 
-// //get user by id
-// router.get('/:id', async (req: Request, res: Response) => {
-//   try {
-//     const user = await UserModel.findById(req.params.id).select('-password');
-//     res.json(user);
-//   } catch (error) {
-//     console.error('An error occurred:', error);
-//     res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
-//   }
-// });
-
 //updata username
 router.put(
   '/',

@@ -6,10 +6,12 @@ import { CommentController } from '../controllers/commentController';
 const router = Router();
 const commentController = new CommentController();
 
+//get all comments
 router.get('/', async (req: Request, res: Response) => {
   await commentController.getAllComments(req, res);
 });
 
+//save new comment
 router.post(
   '/',
   [check('content', 'Please include a content with 5 or more characters').isLength({ min: 5 })],
@@ -22,10 +24,12 @@ router.post(
   },
 );
 
+//delete comment by id
 router.delete('/:id', async (req: Request, res: Response) => {
   await commentController.deleteCommentById(req, res);
 });
 
+//update comment by id
 router.put(
   '/:id',
   [check('content', 'Please include a content with 5 or more characters').isLength({ min: 5 })],
