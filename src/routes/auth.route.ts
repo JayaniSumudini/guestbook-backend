@@ -197,7 +197,7 @@ router.post(
 );
 
 //reset password with new password and otp validation
-router.post(
+router.put(
   '/resetPassword',
   [
     check('newPassword', 'Password is required').exists(),

@@ -35,7 +35,7 @@ router.post(
     try {
       const { name, email, password } = req.body;
       console.log(name, email, password);
-      let user: IUser | null = await UserModel.findOne({ email }); 
+      let user: IUser | null = await UserModel.findOne({ email });
 
       console.log(user);
 
