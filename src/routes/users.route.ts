@@ -12,8 +12,44 @@ const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const users = await UserModel.find().select('-password');
-    res.json(users);
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (token) {
+      let decoded;
+      try {
+        decoded = jwt.verify(token, config.get('jwtSecret'));
+        console.log(decoded);
+      } catch (error) {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'Invalid Auth token',
+            },
+          ],
+        });
+      }
+
+      const { userId, userType } = decoded as Payload;
+      if (userType !== UserType.ADMIN) {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'Invalid Auth token',
+            },
+          ],
+        });
+      }
+      const users = await UserModel.find({ userType: UserType.USER }).select('-password').sort({ createdAt: -1 });
+      res.json({ users });
+    } else {
+      return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+        errors: [
+          {
+            msg: 'Auth token is required',
+          },
+        ],
+      });
+    }
   } catch (error) {
     console.error('An error occurred:', error);
     res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
@@ -148,10 +184,46 @@ router.put(
 );
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const user = await UserModel.findByIdAndUpdate(req.params.id, { isDeleted: true }, { new: true }).select(
-      '-password',
-    );
-    res.json(user);
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (token) {
+      let decoded;
+      try {
+        decoded = jwt.verify(token, config.get('jwtSecret'));
+        console.log(decoded);
+      } catch (error) {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'Invalid Auth token',
+            },
+          ],
+        });
+      }
+
+      const { userId, userType } = decoded as Payload;
+      if (userType !== UserType.ADMIN) {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'Invalid Auth token',
+            },
+          ],
+        });
+      }
+      const user = await UserModel.findByIdAndUpdate(req.params.id, { isDeleted: true }, { new: true }).select(
+        '-password',
+      );
+      res.json({ user });
+    } else {
+      return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+        errors: [
+          {
+            msg: 'Auth token is required',
+          },
+        ],
+      });
+    }
   } catch (error) {
     console.error('An error occurred:', error);
     res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
@@ -179,6 +251,53 @@ router.delete('/', async (req: Request, res: Response) => {
       const userId = (decoded as Payload).userId;
       const user = await UserModel.findByIdAndUpdate(userId, { isDeleted: true }, { new: true }).select('-password');
       res.json(user);
+    } else {
+      return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+        errors: [
+          {
+            msg: 'Auth token is required',
+          },
+        ],
+      });
+    }
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
+  }
+});
+
+router.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (token) {
+      let decoded;
+      try {
+        decoded = jwt.verify(token, config.get('jwtSecret'));
+        console.log(decoded);
+      } catch (error) {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'Invalid Auth token',
+            },
+          ],
+        });
+      }
+
+      const { userId, userType } = decoded as Payload;
+      if (userType !== UserType.ADMIN) {
+        return res.status(HttpStatusCodes.UNAUTHORIZED).json({
+          errors: [
+            {
+              msg: 'Invalid Auth token',
+            },
+          ],
+        });
+      }
+      const { isBanned } = req.body;
+      const user = await UserModel.findByIdAndUpdate(req.params.id, { isBanned }, { new: true }).select('-password');
+      res.json({ user });
     } else {
       return res.status(HttpStatusCodes.UNAUTHORIZED).json({
         errors: [

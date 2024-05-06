@@ -20,6 +20,7 @@ router.get('/', async (req: Request, res: Response) => {
     res.status(500).json(error);
   }
 });
+
 router.post(
   '/',
   [check('content', 'Please include a content with 5 or more characters').isLength({ min: 5 })],
@@ -54,10 +55,10 @@ router.post(
             ],
           });
         }
-        const userId = (decoded as Payload).userId;
+        const { userId, userType } = decoded as Payload;
         const user = await UserModel.findById(userId).select('-password');
         if (user) {
-          newComment.user.userType = UserType.USER;
+          newComment.user.userType = userType;
           newComment.user.id = userId;
           newComment.user.name = user.name;
         }
@@ -73,6 +74,7 @@ router.post(
     }
   },
 );
+
 // router.get('/:id', async (req: Request, res: Response) => {
 //   try {
 //     const comment = await CommentModel.findById(req.params.id);
@@ -133,6 +135,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
     res.status(500).json(error);
   }
 });
+
 router.put(
   '/:id',
   [check('content', 'Please include a content with 5 or more characters').isLength({ min: 5 })],

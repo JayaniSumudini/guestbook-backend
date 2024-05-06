@@ -22,6 +22,10 @@ functions:
       - http:
           path: /api/users
           method: ANY
+      - http:
+          path: /api/users/{id}
+          method: ANY
+
   auth:
     handler: dist/app.handler
     events:
