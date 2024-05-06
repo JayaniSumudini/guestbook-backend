@@ -1,0 +1,6 @@
+{
+  "mongoURI": "mongodb+srv://jayanisumudini:a6n1isLVMbXR4ldy@guestbook-dev.g9j8s9i.mongodb.net/?retryWrites=true&w=majority&appName=guestbook-dev",
+  "jwtSecret": "eb4b7607-0e83-47ac-abfd-bf04e24c596b",
+  "jwtResetPasswordSecret": "081b39cf-e136-4e4f-a0ae-4cc6077e0805",
+  "jwtExpiration": "1h"
+}
